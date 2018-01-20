@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<body>
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+<script src="{{url_for('static', filename='bootstrap.min.js')}}"></script>
+<header class="header">
+    <div class="search">
+        <h1 align="center"><font color='#9bbff4'>TwittMap {{search}}</font>
+        <!--Search drop down-->
+        <font size=4em>
+          <form action="/" method="POST">
+            <select name="Search" id="search" onchange="this.form.submit()">
+              <option value="">Select One</option>
+              <option value="Amazon">Amazon</option>
+              <option value="Food">Food</option>
+              <option value="Google">Google</option>
+              <option value="Today">Today</option>
+              <option value="BigData">BigData</option>
+              <option value="Apple">Apple</option>
+              <option value="Samsung">Samsung</option>
+              <option value="iphone">iphone</option>
+              <option value="NYC">NYC</option>
+              <option value="Dog">Dog</option>
+        </select>
+        <form><input type="button" onClick="history.go(0)" class="btn btn-link btn-xs" value="Refresh to View All {{search}}"></form>
+    </font></h1></div>
+</header>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>TwittMap {{search}} Margaret & Jieyao</title>
+  <style>
+    #map {
+      height: 90%;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+      height: 90%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+ <div id="map"></div>
+ <script>
+ </script>
+ <script>
+   function initMap() {
+     var map = new google.maps.Map(document.getElementById('map'), {
+       zoom: 2,
+       center: {lat: 40.8415521, lng: -73.9412487}
+     });
+     var infoWin = new google.maps.InfoWindow();
+
+     var markers = locations.map(function(location, i) { //Marker begins
+       var marker = new google.maps.Marker({
+         position: location
+       });
+       google.maps.event.addListener(marker, 'click', function(evt) {
+         infoWin.setContent('<div id="content">'+
+         '<div id="SiteNotice">'+
+         '</div>'+
+         '<h1 id="firstHeading" class="firstHeading">'+'@'+location.user+'</h1>'+
+         '<div id="bodyContent">'+'<b>Created at:</b><br>'+location.time+'<br>'+
+         '<b>Text:</b><br>'+
+         location.text);
+         infoWin.open(map, marker);
+         map.panTo(evt.latLng)
+       })
+       return marker;
+     });  // Marker ends
+     // Add a marker clulsterer to manage the markers.
+     var markerCluster = new MarkerClusterer(map, markers,
+         {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+
+     map.addListener('click', function(evt) {
+       markers = [];
+       var click = [];
+       var click = '['+evt.latLng.lng()+','+evt.latLng.lat()+']';
+       markerCluster.clearMarkers();
+       $.post("/nearby", { data: click }, function(data){
+         gNewMap = JSON.parse(data); //not setting var, so it can be deleted later
+         console.log(gNewMap);
+         locations = newLocation(gNewMap);
+         console.log('location');
+         console.log(locations);
+         /// map new markers here
+         //var markers = mapNearby(locations);
+         var infoWin = [];
+         var infoWin = new google.maps.InfoWindow();
+         var markers = locations.map(function(location, i) {
+           var marker = new google.maps.Marker({
+             position: {'lat': location.lat,'lng': location.lng}
+           });
+           google.maps.event.addListener(marker, 'click', function(evt) {
+             infoWin.setContent('<div id="content">'+
+             '<div id="SiteNotice">'+
+             '</div>'+
+             '<h1 id="firstHeading" class="firstHeading">'+'@'+location.user+'</h1>'+
+             '<div id="bodyContent">'+'<b>Created at:</b><br>'+location.time+'<br>'+
+             '<b>Text:</b><br>'+
+             location.text);
+             infoWin.open(map, marker);
+             map.panTo(evt.latLng);
+           })
+           return marker;
+         }); //return markers;
+         var markerCluster = new MarkerClusterer(map, markers,
+             {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+       }
+     );
+       map.panTo(evt.latLng);
+     });
+  }
+  var locations = locMap();
+
+  function locMap(){
+      var location = [];
+      map_data = {{result|tojson}};
+      for (var i = 0; i < map_data.length; i++) {
+        data = map_data[i];
+        item = {lat: data.lat, lng: data.lng, time: data.time, user: data.user, text: data.text};
+        location.push(item);
+      };
+    return location
+  }
+
+  function newLocation(locations){
+      var location = [];
+      for (var i = 0; i < locations.length; i++) {
+        data = locations[i];
+        item = {lat: data.lat, lng: data.lng, time: data.time, user: data.user, text: data.text};
+        location.push(item);
+      };
+    return location
+  }
+
+  function mapNearby(locations){
+    var infoWin = [];
+    var infoWin = new google.maps.InfoWindow();
+    var markers = locations.map(function(location, i) {
+      console.log({'lat': location.lat,'lng': location.lng})
+      var marker = new google.maps.Marker({
+        position: {'lat': location.lat,'lng': location.lng}
+      });
+      google.maps.event.addListener(marker, 'click', function(evt) {
+        infoWin.setContent('<div id="content">'+
+        '<div id="SiteNotice">'+
+        '</div>'+
+        '<h1 id="firstHeading" class="firstHeading">'+'@'+location.user+'</h1>'+
+        '<div id="bodyContent">'+'<b>Created at:</b><br>'+location.time+'<br>'+
+        '<b>Text:</b><br>'+
+        location.text);
+        infoWin.open(map, marker);
+        map.panTo(evt.latLng);
+      })
+      return marker;
+    }); //return markers;
+  }
+
+ </script>
+ <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+ </script>
+<!--Map code ends here-->
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQQoeBWg5f0lv6M8yAavQou_TzTVypUfs&callback=initMap">
+    </script>
+    </head>
+    <div><script>
+    var tweets = {{result|tojson}}
+    document.writeln("<b>10 Most Recent Tweets:<br></b>")
+    for (var i = tweets.length-1; i > tweets.length-11; i--){
+      document.writeln("created at: ", tweets[i].time,"| user: @",tweets[i].user,"| text: ",tweets[i].text,"<br>")
+    }
+    </script><div>
+  </body>
+</html>
