@@ -14,7 +14,7 @@ Flask==0.12.2
 Flask-Elasticsearch==0.2.5
 idna==2.6
 itsdangerous==0.24
-Jinja2==2.9.6
+Jinja2==2.11.3
 jmespath==0.9.3
 jsonify==0.5
 MarkupSafe==1.0
